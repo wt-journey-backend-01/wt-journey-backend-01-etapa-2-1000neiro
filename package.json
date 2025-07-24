@@ -21,7 +21,8 @@
   "homepage": "https://github.com/wt-journey-backend-01/wt-journey-backend-01-etapa-2-1000neiro#readme",
   "dependencies": {
     "express": "^5.1.0",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "zod": "^4.0.8"
   },
   "directories": {
     "doc": "docs"

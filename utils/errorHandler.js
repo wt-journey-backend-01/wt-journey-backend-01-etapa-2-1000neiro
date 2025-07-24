@@ -1,15 +1,20 @@
-class ApiError extends Error {
-    constructor(status, message, error = {}) {
-        super(message);
-        this.status;
-        this.error
+const errorHandler = (err, req, res, next) => {
+    console.error(err.stack);
 
-    }
+
+    const statusCode = err.statusCode || 500;
+    const message = err.message || "Erro servidor.";
+
+    res.status(statusCode).json({
+        status: error,
+        statusCode,
+        message
+    });
 };
 
 module.exports = {
-    ApiError
-}
+    errorHandler
+};
 
 
 //error feito corretamente
