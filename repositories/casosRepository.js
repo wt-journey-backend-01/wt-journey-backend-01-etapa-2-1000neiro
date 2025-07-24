@@ -1,18 +1,51 @@
-const casos = [
-    {
-        id: "f5fb2ad5-22a8-4cb4-90f2-8733517a0d46",
-        titulo: "homicidio",
-        descricao: "Disparos foram reportados às 22:33 do dia 10/07/2007 na região do bairro União, resultando na morte da vítima, um homem de 45 anos.",
-        status: "aberto",
-        agente_id: "401bccf5-cf9e-489d-8412-446cd169a0f1" 
-    
-    },
-    //Demais objetos
-]
+// sempre importar o uuid 
+const { v4: uuidv4 } = require("uuid");
+const casos = [];
 
-function findAll() {
-    return casos
-}
+
+//Todos os casos
+const findAll = () => casos;
+
+
+//Caso Especifico
+const findById = (id) => casos.find((a) => a.id === id);
+
+
+//Cria Caso
+const createCases = (data) => {
+    const novoCaso = { id: uuidv4, ...data };
+    casos.push(novoCaso);
+    return novoCaso;
+};
+
+
+//Atualiza Caso
+const updateCases = (id, data) => {
+    const index = casos.findIndex((u) => u.id === id);
+    if (index !== -1) {
+        casos[index] = { ...casos[index], ...data, id: casos[casosIndex].id };
+        return casos[index];
+    };
+    return null;
+};
+
+
+//Remove casos
+const deleteCases = (id) => {
+    const index = casos.findIndex((d) => d.id === id); {
+        if (index !== -1) {
+            casos.splice(index, 1);
+            return true;
+        };
+        return false;
+    };
+};
+
+// Exporta Casos
 module.exports = {
-    findAll
+    findAll,
+    findById,
+    createCases,
+    updateCases,
+    deleteCases
 }
