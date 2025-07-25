@@ -3,8 +3,8 @@ const app = express();
 const PORT = 3000;
 app.use(express.json());
 
-const casosRouter = require("./routes/casosRoutes");
-app.use("/casos", casosRouter);
+//const casosRouter = require("./routes/casosRoutes");
+//app.use("/casos", casosRouter);
 
 const agentesRouter = require("./routes/agenteRoutes");
 app.use ("/agentes", agentesRouter);
