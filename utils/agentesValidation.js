@@ -1,6 +1,4 @@
-const { required } = require("zod/mini");
-
-const { z } = reequire("zod");
+const { z } = require("zod");
 
 const agenteSchema = z.object({
     id: z.string().uuid({ message: 'ID deve ser um UUID válido' }),
@@ -13,5 +11,5 @@ const agenteSchema = z.object({
 
 
 module.exports = {
-    agentesSchema
+    agenteSchema
 };

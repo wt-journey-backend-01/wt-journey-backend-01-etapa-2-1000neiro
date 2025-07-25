@@ -13,7 +13,7 @@ const findById = (id) => casos.find((a) => a.id === id);
 
 //Cria Caso
 const createCases = (data) => {
-    const novoCaso = { id: uuidv4, ...data };
+    const novoCaso = { id: uuidv4(), ...data };
     casos.push(novoCaso);
     return novoCaso;
 };
@@ -23,7 +23,7 @@ const createCases = (data) => {
 const updateCases = (id, data) => {
     const index = casos.findIndex((u) => u.id === id);
     if (index !== -1) {
-        casos[index] = { ...casos[index], ...data, id: casos[casosIndex].id };
+        casos[index] = { ...casos[index], ...data, id: casos[casosindex].id };
         return casos[index];
     };
     return null;
