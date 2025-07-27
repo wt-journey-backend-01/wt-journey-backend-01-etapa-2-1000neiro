@@ -1,45 +1,76 @@
 const casosRepository = require("../repositories/casosRepository");
-const agenteRepository = require("../repositories/agentesRepository");
-const ApiError = require("../utils/errorHandler");
+const { ApiError } = require("../utils/errorHandler");
+const { casoSchema } = require("../utils/casosValidation");
 
-const getAllCases = (req, res, next) => {
-        const agenteid = req.query.agente_id;
-        const status = req.query.status;
-
-        try {
-                let casos = casosRepository.findAll();
-                if (agenteid) {
-                        casos = casos.filter((caso) => caso.agente_id === agenteid); // Corrigido para usar agente_id
-                        if (casos.length === 0) {
-                                throw new ApiError(404, `Caso não encontrado para o agente de Id: ${agenteid}`);
-                        }
-                }
-                if (status) {
-                        casos = casos.filter((caso) => caso.status === status);
-                        if (casos.length === 0) {
-                                throw new ApiError(404, `Caso não encontrado com o status: ${status}`);
-                        }
-                }
-                res.status(200).json(casos);
-        } catch (error) {
-                next(error);
-        }
+const getCasos = (req, res, next) => {
+    try {
+        const casos = casosRepository.findAll();
+        res.status(200).json(casos);
+    } catch (error) {
+        next(new ApiError("Erro ao listar casos", 500));
+    }
 };
 
-const getCasoId = (req, res, next) => {
-        const id = req.params.id; // Corrigido para pegar o id corretamente
-        try {
-                const caso = casosRepository.findById(id); // Chamada correta ao repositório
-                if (!caso) {
-                        return res.status(404).json({ message: "Caso não encontrado." });
-                }
-                res.status(200).json(caso);
-        } catch (error) {
-                next(new ApiError("Erro na busca do caso.", 400));
-        }
+const getCasoById = (req, res, next) => {
+    try {
+        const caso = casosRepository.findById(req.params.id);
+        if (!caso) throw new ApiError("Caso não encontrado", 404);
+        res.status(200).json(caso);
+    } catch (error) {
+        next(error);
+    }
+};
+
+const postCaso = (req, res, next) => {
+    try {
+        const validatedData = casoSchema.parse(req.body);
+        const newCaso = casosRepository.create(validatedData);
+        res.status(201).json(newCaso);
+    } catch (error) {
+        const errorMessage = error.errors ? error.errors[0].message : "Erro ao criar caso";
+        next(new ApiError(errorMessage, 400));
+    }
+};
+
+const putCaso = (req, res, next) => {
+    try {
+        const validatedData = casoSchema.parse(req.body);
+        const updatedCaso = casosRepository.update(req.params.id, validatedData);
+        if (!updatedCaso) throw new ApiError("Caso não encontrado", 404);
+        res.status(200).json(updatedCaso);
+    } catch (error) {
+        const errorMessage = error.errors ? error.errors[0].message : "Erro ao atualizar caso";
+        next(new ApiError(errorMessage, 400));
+    }
+};
+
+const patchCaso = (req, res, next) => {
+    try {
+        const validatedData = casoSchema.partial().parse(req.body);
+        const updatedCaso = casosRepository.update(req.params.id, validatedData);
+        if (!updatedCaso) throw new ApiError("Caso não encontrado", 404);
+        res.status(200).json(updatedCaso);
+    } catch (error) {
+        const errorMessage = error.errors ? error.errors[0].message : "Erro ao atualizar caso";
+        next(new ApiError(errorMessage, 400));
+    }
+};
+
+const deleteCaso = (req, res, next) => {
+    try {
+        const removed = casosRepository.remove(req.params.id);
+        if (!removed) throw new ApiError("Caso não encontrado", 404);
+        res.status(204).end();
+    } catch (error) {
+        next(new ApiError("Erro ao remover caso", 500));
+    }
 };
 
 module.exports = {
-        getAllCases,
-        getCasoId
+    getCasos,
+    getCasoById,
+    postCaso,
+    putCaso,
+    patchCaso,
+    deleteCaso
 };

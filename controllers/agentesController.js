@@ -7,17 +7,14 @@ const getAgents = (req, res, next) => {
         const agentes = agenteRepository.findAll();
         res.status(200).json(agentes);
     } catch (error) {
-        next(new ApiError("Erro ao listar agentes.", 500));
+        next(new ApiError("Erro ao listar agentes", 500));
     }
 };
 
 const getAgentsById = (req, res, next) => {
     try {
-        const { id } = req.params;
-        const agente = agenteRepository.findById(id);
-        if (!agente) {
-            throw new ApiError("Agente não encontrado.", 404);
-        }
+        const agente = agenteRepository.findById(req.params.id);
+        if (!agente) throw new ApiError("Agente não encontrado", 404);
         res.status(200).json(agente);
     } catch (error) {
         next(error);
@@ -27,51 +24,45 @@ const getAgentsById = (req, res, next) => {
 const postAgents = (req, res, next) => {
     try {
         const validatedData = agenteSchema.parse(req.body);
-        const newAgent = agenteRepository.createAgents(validatedData);
+        const newAgent = agenteRepository.create(validatedData);
         res.status(201).json(newAgent);
     } catch (error) {
-        next(new ApiError(error.errors?.map(e => e.message).join(", ") || "Erro ao criar agente", 400));
+        const errorMessage = error.errors ? error.errors[0].message : "Erro ao criar agente";
+        next(new ApiError(errorMessage, 400));
     }
 };
 
 const putAgents = (req, res, next) => {
     try {
-        const { id } = req.params;
         const validatedData = agenteSchema.parse(req.body);
-        const updatedAgent = agenteRepository.updateAgents(id, validatedData);
-        if (!updatedAgent) {
-            throw new ApiError("Agente não encontrado", 404);
-        }
+        const updatedAgent = agenteRepository.update(req.params.id, validatedData);
+        if (!updatedAgent) throw new ApiError("Agente não encontrado", 404);
         res.status(200).json(updatedAgent);
     } catch (error) {
-        next(new ApiError(error.errors?.map(e => e.message).join(", ") || "Erro ao atualizar agente", 400));
+        const errorMessage = error.errors ? error.errors[0].message : "Erro ao atualizar agente";
+        next(new ApiError(errorMessage, 400));
     }
 };
 
 const patchAgents = (req, res, next) => {
     try {
-        const { id } = req.params;
         const validatedData = agenteSchema.partial().parse(req.body);
-        const updatedAgent = agenteRepository.patchAgents(id, validatedData);
-        if (!updatedAgent) {
-            throw new ApiError("Agente não encontrado", 404);
-        }
+        const updatedAgent = agenteRepository.update(req.params.id, validatedData);
+        if (!updatedAgent) throw new ApiError("Agente não encontrado", 404);
         res.status(200).json(updatedAgent);
     } catch (error) {
-        next(new ApiError(error.errors?.map(e => e.message).join(", ") || "Erro ao atualizar agente", 400));
+        const errorMessage = error.errors ? error.errors[0].message : "Erro ao atualizar agente";
+        next(new ApiError(errorMessage, 400));
     }
 };
 
 const deleteAgents = (req, res, next) => {
     try {
-        const { id } = req.params;
-        const deleted = agenteRepository.deleteAgents(id);
-        if (!deleted) {
-            throw new ApiError("Agente não encontrado", 404);
-        }
+        const removed = agenteRepository.remove(req.params.id);
+        if (!removed) throw new ApiError("Agente não encontrado", 404);
         res.status(204).end();
     } catch (error) {
-        next(new ApiError("Erro ao deletar agente", 500));
+        next(new ApiError("Erro ao remover agente", 500));
     }
 };
 

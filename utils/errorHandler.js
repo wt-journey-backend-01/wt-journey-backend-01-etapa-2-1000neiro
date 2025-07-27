@@ -1,20 +1,26 @@
+class ApiError extends Error {
+    constructor(message, statusCode, errors = []) {
+        super(message);
+        this.statusCode = statusCode;
+        this.errors = errors;
+    }
+}
+
 const errorHandler = (err, req, res, next) => {
-    console.error(err.stack);
+    console.error(err);
+    
+    if (err instanceof ApiError) {
+        return res.status(err.statusCode).json({
+            status: 'error',
+            message: err.message,
+            errors: err.errors
+        });
+    }
 
-
-    const statusCode = err.statusCode || 500;
-    const message = err.message || "Erro servidor.";
-
-    res.status(statusCode).json({
-        status: error,
-        statusCode,
-        message
+    res.status(500).json({
+        status: 'error',
+        message: 'Erro interno no servidor'
     });
 };
 
-module.exports = {
-    errorHandler
-};
-
-
-//error feito corretamente
+module.exports = { ApiError, errorHandler };

@@ -1,51 +1,34 @@
-// sempre importar o uuid 
-const { v4: uuidv4 } = require("uuid");
+const { v4: uuidv4 } = require('uuid');
+
 const casos = [];
 
+const findAll = () => [...casos];
 
-//Todos os casos
-const findAll = () => casos;
+const findById = (id) => casos.find(c => c.id === id) || null;
 
-
-//Caso Especifico
-const findById = (id) => casos.find((a) => a.id === id);
-
-
-//Cria Caso
-const createCases = (data) => {
-    const novoCaso = { id: uuidv4(), ...data };
-    casos.push(novoCaso);
-    return novoCaso;
+const create = (caso) => {
+    const newCaso = { id: uuidv4(), ...caso };
+    casos.push(newCaso);
+    return newCaso;
 };
 
-
-//Atualiza Caso
-const updateCases = (id, data) => {
-    const index = casos.findIndex((u) => u.id === id);
-    if (index !== -1) {
-        casos[index] = { ...casos[index], ...data, id: casos[casosindex].id };
-        return casos[index];
-    };
-    return null;
+const update = (id, data) => {
+    const index = casos.findIndex(c => c.id === id);
+    if (index === -1) return null;
+    casos[index] = { ...casos[index], ...data };
+    return casos[index];
 };
 
-
-//Remove casos
-const deleteCases = (id) => {
-    const index = casos.findIndex((d) => d.id === id); {
-        if (index !== -1) {
-            casos.splice(index, 1);
-            return true;
-        };
-        return false;
-    };
+const remove = (id) => {
+    const initialLength = casos.length;
+    casos = casos.filter(c => c.id !== id);
+    return initialLength !== casos.length;
 };
 
-// Exporta Casos
 module.exports = {
     findAll,
     findById,
-    createCases,
-    updateCases,
-    deleteCases
-}
+    create,
+    update,
+    remove
+};

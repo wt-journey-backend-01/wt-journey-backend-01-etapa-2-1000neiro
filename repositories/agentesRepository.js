@@ -1,52 +1,34 @@
-const { v4: uuidv4 } = require("uuid");
+const { v4: uuidv4 } = require('uuid');
 
 const agentes = [];
 
-const findAll = () => {
-    return agentes;
+const findAll = () => [...agentes];
+
+const findById = (id) => agentes.find(a => a.id === id) || null;
+
+const create = (agente) => {
+    const newAgent = { id: uuidv4(), ...agente };
+    agentes.push(newAgent);
+    return newAgent;
 };
 
-const findById = (id) => {
-    return agentes.find(agente => agente.id === id);
-};
-const createAgents = (newAgent) => {
-    const agentWithId = { id: uuidv4(), ...newAgent };
-    agentes.push(agentWithId);
-    return agentWithId;
+const update = (id, data) => {
+    const index = agentes.findIndex(a => a.id === id);
+    if (index === -1) return null;
+    agentes[index] = { ...agentes[index], ...data };
+    return agentes[index];
 };
 
-const updateAgents = (id, updatedAgent) => {
-    const index = agentes.findIndex(agente => agente.id === id);
-    if (index !== -1) {
-        agentes[index] = { ...agentes[index], ...updateAgent };
-        return agentes[index];
-    }
-    return null;
-};
-
-const patchAgents = (id, updatedData) => {
-    const index = agentes.findIndex(agente => agente.id === id);
-    if (index !== -1) {
-        agentes[index] = { ...agentes[index], ...updatedData };
-        return agentes[index];
-    }
-    return null;
-};
-
-const deleteAgents = (id) => {
-    const index = agentes.findIndex(agente => agente.id === id);
-    if (index !== -1) {
-        agentes.splice(index, 1);
-        return true;
-    }
-    return false;
+const remove = (id) => {
+    const initialLength = agentes.length;
+    agentes = agentes.filter(a => a.id !== id);
+    return initialLength !== agentes.length;
 };
 
 module.exports = {
     findAll,
     findById,
-    createAgents,
-    updateAgents,
-    patchAgents,
-    deleteAgents
+    create,
+    update,
+    remove
 };
