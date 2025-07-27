@@ -3,6 +3,7 @@ const app = express();
 const PORT = 3000;
 app.use(express.json());
 
+
 require('./docs/swagger')(app);
 
 
@@ -17,5 +18,5 @@ const { errorHandler } = require('./utils/errorHandler');
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
+    console.log(`Servidor rodando em http://localhost:${PORT}`);
 });

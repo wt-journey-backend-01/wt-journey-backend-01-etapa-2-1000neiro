@@ -22,21 +22,17 @@ const options = {
           properties: {
             id: {
               type: 'string',
-              format: 'uuid',
-              example: '401bccf5-cf9e-489d-8412-446cd169a0f1'
+              format: 'uuid'
             },
             nome: {
-              type: 'string',
-              example: 'Rommel Carneiro'
+              type: 'string'
             },
             dataDeIncorporacao: {
               type: 'string',
-              format: 'date',
-              example: '1992-10-04'
+              format: 'date'
             },
             cargo: {
-              type: 'string',
-              example: 'delegado'
+              type: 'string'
             }
           }
         },
@@ -45,33 +41,28 @@ const options = {
           properties: {
             id: {
               type: 'string',
-              format: 'uuid',
-              example: 'f5fb2ad5-22a8-4cb4-90f2-8733517a0d46'
+              format: 'uuid'
             },
             titulo: {
-              type: 'string',
-              example: 'Homicídio'
+              type: 'string'
             },
             descricao: {
-              type: 'string',
-              example: 'Disparos foram reportados às 22:33 na região do bairro União'
+              type: 'string'
             },
             status: {
               type: 'string',
-              enum: ['aberto', 'solucionado'],
-              example: 'aberto'
+              enum: ['aberto', 'solucionado']
             },
             agente_id: {
               type: 'string',
-              format: 'uuid',
-              example: '401bccf5-cf9e-489d-8412-446cd169a0f1'
+              format: 'uuid'
             }
           }
         }
       }
     }
   },
-  apis: ['./routes/*.js'], // Caminho para os arquivos de rotas
+  apis: ['./routes/*.js'],
 };
 
 const specs = swaggerJsdoc(options);
