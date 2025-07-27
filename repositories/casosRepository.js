@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 
-const casos = [];
+let casos = [];
 
 const findAll = () => [...casos];
 
@@ -20,9 +20,10 @@ const update = (id, data) => {
 };
 
 const remove = (id) => {
-    const initialLength = casos.length;
-    casos = casos.filter(c => c.id !== id);
-    return initialLength !== casos.length;
+    const index = casos.findIndex(c => c.id === id);
+    if (index === -1) return false;
+    casos.splice(index, 1);
+    return true;
 };
 
 module.exports = {
