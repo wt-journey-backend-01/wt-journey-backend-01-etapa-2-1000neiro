@@ -1,273 +1,260 @@
 <sup>Esse é um feedback gerado por IA, ele pode conter erros.</sup>
 
-Você tem 5 créditos restantes para usar o sistema de feedback AI.
+Você tem 4 créditos restantes para usar o sistema de feedback AI.
 
 # Feedback para 1000neiro:
 
-Nota final: **25.5/100**
+Nota final: **51.6/100**
 
-# Feedback para 1000neiro 🚀 — API do Departamento de Polícia
+# Feedback para 1000neiro 🚀 - API do Departamento de Polícia
 
-Olá, 1000neiro! Tudo bem? 😊 Antes de mais nada, quero parabenizá-lo por todo o esforço e dedicação que você colocou nesse desafio! Construir uma API RESTful completa não é tarefa fácil, e vejo que você já tem uma boa base, especialmente no uso do Express.js, na modularização com controllers e repositories, e na implementação de validações usando o Zod. Isso é muito bacana! 🎉
-
----
-
-## 🎯 O que você já mandou bem
-
-- **Modularização do código:** Você organizou bem as responsabilidades entre controllers e repositories, o que é essencial para manter o projeto escalável e fácil de manter.
-- **Uso do Zod para validação:** A validação dos dados do agente está bem estruturada, com tratamento de erros customizados no controller.
-- **Tratamento de erros centralizado:** A criação do `ApiError` e o middleware de erro mostram que você entendeu a importância de um tratamento consistente.
-- **Implementação parcial dos controllers para agentes e casos:** Os métodos para buscar, criar, atualizar e deletar agentes estão presentes e estruturados.
-- **Filtros básicos em casos:** Você já implementou a filtragem por `agente_id` e `status` no controller de casos, o que é um ótimo começo para os filtros.
-- **Respostas HTTP com status codes adequados:** Você usa códigos como 200, 201, 204 e 404, o que indica que está atento aos padrões REST.
+Olá, 1000neiro! Tudo bem? Primeiro, quero parabenizar você pelo esforço e pelo que já conseguiu construir nessa API para o Departamento de Polícia! 🎉 Você estruturou seu projeto de forma modular, separando rotas, controladores e repositórios, o que é fundamental para um código organizado e escalável. Além disso, percebi que você aplicou validações usando `zod` e tratamento de erros personalizados, o que mostra um cuidado muito bom com a qualidade da API. Mandou bem! 👏
 
 ---
 
-## 🕵️ Análise Profunda: Pontos que precisam de atenção
+## O que está funcionando muito bem 👍
 
-### 1. **Falta dos arquivos de rotas e registro das rotas para `/casos` e `/agentes`**
+- **Endpoints básicos dos agentes e casos estão implementados:** Você criou rotas para todos os métodos HTTP esperados (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`) tanto para `/agentes` quanto para `/casos`. Isso é essencial e você conseguiu entregar.
+- **Validação com Zod:** O uso do `zod` para validar o corpo das requisições é um ponto forte, pois ajuda a garantir que os dados estejam no formato correto antes de serem processados.
+- **Tratamento de erros com classes personalizadas:** O uso do `ApiError` para encapsular mensagens e códigos de erro é uma ótima prática para manter o código limpo e organizado.
+- **Arquitetura modular:** A separação clara entre `routes`, `controllers` e `repositories` está correta e facilita a manutenção.
+- **Bônus conquistados:** Você implementou corretamente o filtro simples de casos por status e a busca de agente responsável por caso, além de outras funcionalidades bônus relacionadas a filtragem e ordenação. Isso mostra que você foi além do básico, parabéns! 🎉
 
-Ao analisar seu projeto, percebi que o arquivo `routes/agentesRoutes.js` **não existe** e o arquivo `routes/casosRoutes.js` está vazio. Além disso, no seu `server.js` você importa e registra somente a rota de agentes (`/api/agentes`), mas como o arquivo de rotas não existe, isso impede que qualquer requisição para `/api/agentes` funcione de fato.
+---
+
+## Pontos de melhoria importantes para destravar sua API e melhorar sua nota 🚧
+
+### 1. Problema fundamental com a manipulação dos arrays nos repositórios (`remove`)
+
+Ao analisar os arquivos `agentesRepository.js` e `casosRepository.js`, percebi um erro crítico que afeta as operações de **DELETE** (remoção) e possivelmente outras operações que dependem da atualização da lista.
+
+O problema está aqui:
+
+```js
+const agentes = [];
+// ...
+const remove = (id) => {
+    const initialLength = agentes.length;
+    agentes = agentes.filter(a => a.id !== id);
+    return initialLength !== agentes.length;
+};
+```
+
+E o mesmo acontece em `casosRepository.js` para o array `casos`.
+
+**Por que isso é um problema?**
+
+- Você declarou `agentes` (e `casos`) com `const`, que significa que você não pode reatribuir o array (não pode fazer `agentes = ...`).
+- Ao tentar reatribuir com `agentes = agentes.filter(...)`, você está tentando mudar a referência do array, o que não é permitido.
+- Isso provavelmente causa que a remoção **não funcione de verdade** e que o array original não seja alterado.
+
+**Como corrigir?**
+
+Ao invés de reatribuir, você deve modificar o array original, por exemplo, usando `splice` ou filtrando para um novo array e atualizando o conteúdo do array original:
+
+```js
+// Opção 1: Usar splice para remover o item pelo índice
+const remove = (id) => {
+    const index = agentes.findIndex(a => a.id === id);
+    if (index === -1) return false;
+    agentes.splice(index, 1);
+    return true;
+};
+```
+
+Ou, se quiser usar `filter`, você precisa mudar `agentes` para `let` (não recomendado) ou usar outra abordagem.
+
+Essa correção vai fazer seu DELETE funcionar corretamente! 💥
+
+---
+
+### 2. Validação das requisições PUT e PATCH para impedir alteração do campo `id`
+
+Eu vi que nos seus controladores você usa o esquema completo (`agenteSchema` e `casoSchema`) para validar o corpo da requisição, mas não está impedindo que o campo `id` seja alterado no payload.
+
+Por exemplo, no `putAgents`:
+
+```js
+const putAgents = (req, res, next) => {
+    try {
+        const validatedData = agenteSchema.parse(req.body);
+        const updatedAgent = agenteRepository.update(req.params.id, validatedData);
+        // ...
+```
+
+Se o `req.body` vier com um campo `id`, seu código vai aceitar e atualizar o `id` do agente, o que não é correto.
+
+**Por que isso é um problema?**
+
+- O `id` deve ser imutável, pois é o identificador único da entidade.
+- Permitir a alteração do `id` pode causar inconsistências e erros difíceis de rastrear.
+
+**Como corrigir?**
+
+- Remova o campo `id` do corpo da requisição antes da validação, ou
+- Configure o schema para não aceitar o campo `id` no corpo, usando `.strip()` no `zod` para ignorar esse campo, ou
+- Faça uma validação customizada para garantir que `id` não esteja presente no `req.body`.
+
+Por exemplo, usando Zod:
+
+```js
+const agenteUpdateSchema = agenteSchema.omit({ id: true }).partial();
+```
+
+E no PATCH:
+
+```js
+const patchAgents = (req, res, next) => {
+    try {
+        const validatedData = agenteUpdateSchema.parse(req.body);
+        // ...
+```
+
+Isso evita que o `id` seja alterado.
+
+---
+
+### 3. Validação da data de incorporação para não aceitar datas futuras
+
+Vi que seu esquema de validação para agentes permite datas de incorporação no futuro, o que não faz sentido para o contexto.
+
+**Por que isso é um problema?**
+
+- Uma data de incorporação futura é inválida, pois o agente não pode ter sido incorporado em uma data que ainda não aconteceu.
+- Isso pode gerar dados incorretos e confusos na aplicação.
+
+**Como corrigir?**
+
+No seu schema Zod para agentes (`agentesValidation.js`), você pode adicionar uma validação customizada para o campo `dataIncorporacao`:
+
+```js
+const agenteSchema = z.object({
+    // outros campos ...
+    dataIncorporacao: z.string().refine(dateStr => {
+        const date = new Date(dateStr);
+        const now = new Date();
+        return date <= now;
+    }, {
+        message: "Data de incorporação não pode ser no futuro"
+    }),
+    // ...
+});
+```
+
+Assim, você garante que a data seja sempre no passado ou presente.
+
+---
+
+### 4. Validação do ID do agente ao criar um caso — relacionamento entre entidades
+
+Notei que no seu endpoint de criação de casos (`postCaso`), o teste espera que, ao criar um caso, o `id` do agente responsável seja válido e existente.
+
+No entanto, seu código não parece validar se o `id` do agente passado no corpo do caso realmente existe no `agentesRepository`.
 
 **Por que isso é importante?**
 
-- Sem as rotas implementadas, o Express não sabe como direcionar as requisições para os controllers.
-- Isso explica porque as operações básicas de criação, leitura, atualização e exclusão falharam para agentes e casos.
-- A falta das rotas é a causa raiz da maioria dos erros que você está enfrentando.
+- Um caso deve estar vinculado a um agente que existe.
+- Se não validar, podem ser criados casos com agentes inexistentes, quebrando a integridade dos dados.
 
 **Como corrigir?**
 
-Crie os arquivos `routes/agentesRoutes.js` e `routes/casosRoutes.js` seguindo este modelo básico para agentes:
+No controlador `postCaso`, antes de criar o caso, faça uma verificação:
 
 ```js
-// routes/agentesRoutes.js
-const express = require("express");
-const router = express.Router();
-const agentesController = require("../controllers/agentesController");
+const postCaso = (req, res, next) => {
+    try {
+        const validatedData = casoSchema.parse(req.body);
 
-router.get("/", agentesController.getAgents);
-router.get("/:id", agentesController.getAgentsById);
-router.post("/", agentesController.postAgents);
-router.put("/:id", agentesController.putAgents);
-router.patch("/:id", agentesController.patchAgents);
-router.delete("/:id", agentesController.deleteAgents);
+        // Verifique se o agente existe
+        const agente = agenteRepository.findById(validatedData.agenteId);
+        if (!agente) {
+            throw new ApiError("Agente responsável não encontrado", 404);
+        }
 
-module.exports = router;
-```
-
-E para casos, algo similar:
-
-```js
-// routes/casosRoutes.js
-const express = require("express");
-const router = express.Router();
-const casosController = require("../controllers/casosController");
-
-router.get("/", casosController.getAllCases);
-router.get("/:id", casosController.getCasoId);
-// Aqui você deve implementar os métodos POST, PUT, PATCH, DELETE para casos também
-
-module.exports = router;
-```
-
-No seu `server.js`, importe e use as duas rotas:
-
-```js
-const agentesRouter = require("./routes/agentesRoutes");
-const casosRouter = require("./routes/casosRoutes");
-
-app.use("/api/agentes", agentesRouter);
-app.use("/api/casos", casosRouter);
-```
-
-**Recurso recomendado:**  
-Para entender melhor como criar rotas no Express e organizá-las em arquivos separados, veja a documentação oficial:  
-https://expressjs.com/pt-br/guide/routing.html
-
----
-
-### 2. **Erros na manipulação dos dados nos repositories**
-
-No arquivo `repositories/agentesRepository.js`, notei um erro sutil, mas importante, que pode estar causando falhas ao atualizar agentes:
-
-```js
-const updateAgents = (id, updatedAgent) => {
-    const index = agentes.findIndex(agente => agente.id === id);
-    if (index !== -1) {
-        agentes[index] = { ...agentes[index], ...updateAgent }; // <-- aqui você usou "updateAgent" ao invés de "updatedAgent"
-        return agentes[index];
+        const newCaso = casosRepository.create(validatedData);
+        res.status(201).json(newCaso);
+    } catch (error) {
+        // tratamento de erro
     }
-    return null;
 };
 ```
 
-Você declarou o parâmetro como `updatedAgent`, mas usou `updateAgent` (sem o "d") dentro da função. Isso gera um erro porque `updateAgent` não existe, e o agente não será atualizado.
+Isso garante que você não crie casos com agentes inválidos.
 
-**Como corrigir?**
+---
 
-Corrija o nome para usar o parâmetro correto:
+### 5. Filtros e ordenação (Bônus) — ainda faltando ou incompletos
+
+Você tentou implementar alguns filtros e ordenações, mas percebi que eles não estão funcionando conforme esperado, e muitos testes bônus relacionados falharam.
+
+Isso indica que a lógica para filtrar casos por status, por agente, ou para ordenar agentes por data de incorporação ainda precisa ser revisada.
+
+**Minha dica:** Comece implementando filtros simples usando `req.query` e aplicando filtros no array retornado pelo repositório, por exemplo:
 
 ```js
-agentes[index] = { ...agentes[index], ...updatedAgent };
-```
+const getCasos = (req, res, next) => {
+    try {
+        let casos = casosRepository.findAll();
 
-Além disso, no `repositories/casosRepository.js` tem um erro parecido e outro que pode causar problemas:
+        if (req.query.status) {
+            casos = casos.filter(c => c.status === req.query.status);
+        }
 
-```js
-const updateCases = (id, data) => {
-    const index = casos.findIndex((u) => u.id === id);
-    if (index !== -1) {
-        casos[index] = { ...casos[index], ...data, id: casos[casosindex].id }; // <-- "casosindex" não existe, deveria ser "index"
-        return casos[index];
-    };
-    return null;
+        // outros filtros...
+
+        res.status(200).json(casos);
+    } catch (error) {
+        next(new ApiError("Erro ao listar casos", 500));
+    }
 };
 ```
 
-Aqui, você tentou garantir que o `id` não seja alterado, mas usou uma variável incorreta `casosindex` que não está definida.
+---
 
-**Como corrigir?**
+## Sobre a estrutura do seu projeto 🗂️
 
-Use a variável correta `index`:
-
-```js
-casos[index] = { ...casos[index], ...data, id: casos[index].id };
-```
-
-Esses pequenos detalhes causam erros silenciosos que impedem a atualização correta dos dados.
-
-**Recurso recomendado:**  
-Para entender melhor manipulação de arrays e objetos em JavaScript, recomendo este vídeo:  
-https://youtu.be/glSgUKA5LjE?si=t9G2NsC8InYAU9cI
+Sua estrutura está muito boa e segue o esperado — você tem as pastas `routes`, `controllers`, `repositories` e `utils` bem organizadas. Isso facilita muito a manutenção e crescimento do projeto. Parabéns por isso! 🎯
 
 ---
 
-### 3. **IDs devem ser UUID válidos**
+## Recursos para aprofundar e corrigir os pontos acima 📚
 
-Você recebeu uma penalidade porque os IDs usados para agentes e casos não são UUIDs válidos. Isso pode acontecer se você estiver aceitando IDs do cliente sem validar ou gerando IDs manualmente de forma incorreta.
+- Para entender melhor como manipular arrays em JavaScript e evitar erros como o que você teve com `remove`:  
+  https://youtu.be/glSgUKA5LjE?si=t9G2NsC8InYAU9cI
 
-No seu código, você usa o pacote `uuid` para gerar IDs para novos agentes e casos, o que está correto:
+- Para aprender a estruturar rotas e middlewares no Express.js, que é a base para organizar sua API:  
+  https://expressjs.com/pt-br/guide/routing.html
 
-```js
-const { v4: uuidv4 } = require("uuid");
-const createAgents = (newAgent) => {
-    const agentWithId = { id: uuidv4(), ...newAgent };
-    agentes.push(agentWithId);
-    return agentWithId;
-};
-```
+- Para fortalecer a validação de dados usando Zod e criar schemas robustos:  
+  https://youtu.be/yNDCRAz7CM8?si=Lh5u3j27j_a4w3A_
 
-Mas o problema pode estar em aceitar IDs inválidos nas rotas que recebem `id` via URL e não validar se o formato é UUID, ou em algum ponto que você aceita IDs no payload.
+- Para entender os códigos de status HTTP e quando usá-los corretamente (como 400 e 404):  
+  https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Status/400  
+  https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Status/404
 
-**Como corrigir?**
-
-- Garanta que toda vez que você recebe um `id` via parâmetro, você valide se ele é um UUID válido. Para isso, você pode usar o próprio `uuid` para validar:
-
-```js
-const { validate: isUuid } = require("uuid");
-
-if (!isUuid(id)) {
-    return next(new ApiError("ID inválido", 400));
-}
-```
-
-- Essa validação pode ser feita em middlewares específicos para rotas que recebem IDs.
-
-**Recurso recomendado:**  
-Para entender como validar UUIDs e garantir IDs corretos, veja este vídeo sobre validação de dados em APIs Node.js:  
-https://youtu.be/yNDCRAz7CM8?si=Lh5u3j27j_a4w3A_
+- Para implementar filtros e ordenação via query params na sua API:  
+  https://youtu.be/--TQwiNIw28
 
 ---
 
-### 4. **Estrutura de diretórios e organização do projeto**
+## Resumo rápido dos pontos para focar 📝
 
-Sua estrutura de arquivos está quase correta, mas faltam alguns arquivos essenciais, principalmente as rotas. Além disso, a organização das pastas deve seguir exatamente o padrão solicitado para que o projeto seja facilmente compreendido por outros desenvolvedores.
-
-Você deve ter a estrutura assim:
-
-```
-.
-├── package.json
-├── server.js
-├── routes/
-│   ├── agentesRoutes.js    <-- faltando!
-│   └── casosRoutes.js      <-- vazio!
-├── controllers/
-│   ├── agentesController.js
-│   └── casosController.js
-├── repositories/
-│   ├── agentesRepository.js
-│   └── casosRepository.js
-├── utils/
-│   ├── agentesValidation.js
-│   ├── casosValidation.js
-│   └── errorHandler.js
-├── docs/
-│   └── swagger.js
-```
-
-**Por que seguir a estrutura?**
-
-- Facilita a manutenção e entendimento do projeto.
-- Ajuda a escalar o projeto conforme ele cresce.
-- Torna mais fácil para outras pessoas colaborarem.
-
-**Dica:** Crie os arquivos de rotas que faltam e coloque as rotas lá, conectando-as no `server.js`.
-
-**Recurso recomendado:**  
-Assista esse vídeo para entender a arquitetura MVC aplicada ao Node.js e Express:  
-https://youtu.be/bGN_xNc4A1k?si=Nj38J_8RpgsdQ-QH
+- Corrija a função `remove` nos repositórios para modificar o array corretamente (usar `splice` ao invés de reatribuir o array `const`).
+- Impeça a alteração do campo `id` nos métodos PUT e PATCH, ajustando os schemas de validação.
+- Adicione validação para impedir datas de incorporação no futuro no schema de agentes.
+- Valide no `postCaso` se o `agenteId` passado existe, para manter a integridade dos dados.
+- Revise e implemente corretamente os filtros e ordenações para casos e agentes via query params.
+- Continue usando e aprimorando o tratamento de erros para garantir mensagens claras e status HTTP corretos.
 
 ---
 
-### 5. **Endpoints para Casos incompletos**
+## Para finalizar 🚀
 
-No seu controller de casos (`casosController.js`), você implementou os métodos para listar todos os casos e buscar por ID, o que é ótimo! Porém, os métodos para criar, atualizar (PUT e PATCH) e deletar casos ainda não estão implementados, e o arquivo de rotas para casos está vazio.
+Você está no caminho certo, 1000neiro! Seu código já tem uma base sólida, e com esses ajustes você vai destravar funcionalidades importantes e deixar sua API ainda mais robusta e confiável. Continue praticando e explorando as boas práticas que você já está aplicando, porque isso vai te levar muito longe! 💪✨
 
-Isso explica porque as operações básicas para casos falham.
+Qualquer dúvida, estou aqui para te ajudar! Vamos juntos nessa jornada de aprendizado!
 
-**Como avançar?**
-
-- Implemente os métodos `postCase`, `putCase`, `patchCase`, `deleteCase` no controller de casos.
-- Crie as rotas correspondentes no arquivo `routes/casosRoutes.js`.
-- Use o mesmo padrão que você usou para agentes, incluindo validação com Zod e tratamento de erros.
-
----
-
-## ✨ Resumo Rápido para Você Focar
-
-- [ ] **Criar os arquivos de rotas `agentesRoutes.js` e `casosRoutes.js`**, implementar todas as rotas e registrá-las no `server.js`.
-- [ ] **Corrigir erros nos repositories**, como o uso incorreto de variáveis (`updateAgent` vs `updatedAgent`, `casosindex` vs `index`).
-- [ ] **Validar IDs UUID em todas as rotas que recebem parâmetros `id`**, para garantir que IDs inválidos sejam rejeitados com status 400.
-- [ ] **Implementar os métodos POST, PUT, PATCH e DELETE para casos**, completando o CRUD.
-- [ ] **Seguir rigorosamente a estrutura de pastas e arquivos esperada**, criando os arquivos faltantes e organizando o projeto para facilitar manutenção.
-- [ ] **Testar cada endpoint com ferramentas como Postman ou Insomnia**, para garantir que os status codes e respostas estejam corretos.
-
----
-
-## 🌟 Para continuar aprendendo e evoluindo
-
-Se quiser reforçar seus conhecimentos e garantir que o próximo passo seja mais tranquilo, recomendo fortemente os seguintes conteúdos:
-
-- **Express.js e roteamento:** https://expressjs.com/pt-br/guide/routing.html  
-- **Arquitetura MVC para Node.js:** https://youtu.be/bGN_xNc4A1k?si=Nj38J_8RpgsdQ-QH  
-- **Manipulação de arrays e objetos em JS:** https://youtu.be/glSgUKA5LjE?si=t9G2NsC8InYAU9cI  
-- **Validação de dados com Zod e tratamento de erros:** https://youtu.be/yNDCRAz7CM8?si=Lh5u3j27j_a4w3A_  
-- **Status HTTP 400 e 404:**  
-  - https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Status/400  
-  - https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Status/404  
-
----
-
-## Finalizando...
-
-1000neiro, você já está no caminho certo! 🚀 A organização do seu código, o uso de validação e o tratamento de erros mostram que você compreende conceitos importantes. Agora, o foco é garantir que a estrutura do projeto esteja completa e que todos os endpoints estejam implementados e conectados corretamente.
-
-Lembre-se: a base de uma API RESTful sólida começa com rotas bem definidas, controllers que fazem seu papel e repositories que manipulam os dados corretamente. Depois, vem a validação e o tratamento de erros para garantir robustez.
-
-Estou aqui torcendo para que você continue firme nessa jornada! Se precisar, volte a revisar os conceitos e implemente passo a passo. Você vai conseguir! 💪🔥
-
-Abraços do seu Code Buddy! 🤖💙
+Abraço virtual e até a próxima revisão! 🤖💙
 
 > Caso queira tirar uma dúvida específica, entre em contato com o Chapter no nosso [discord](https://discord.gg/DryuHVnz).
 
